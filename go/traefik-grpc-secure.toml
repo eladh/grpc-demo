@@ -1,0 +1,68 @@
+################################################################
+# Global configuration
+################################################################
+
+debug = true
+
+logLevel = "DEBUG"
+
+################################################################
+# Entrypoints configuration
+################################################################
+
+[entryPoints]
+  [entryPoints.https]
+    address = ":443"
+    [entryPoints.https.tls]
+      [[entryPoints.https.tls.certificates]]
+        certFile = "ssl/127.0.0.1-cert.pem"
+        keyFile = "ssl/127.0.0.1-key.pem"
+  [entryPoints.api]
+    address = ":8433"
+
+################################################################
+# Traefik logs configuration
+################################################################
+
+[traefikLog]
+
+filePath = "log/traefik-grpc-secure.log"
+
+################################################################
+# Access logs configuration
+################################################################
+
+[accessLog]
+
+filePath = "log/traefik-grpc-secure-access.log"
+format = "json"
+
+################################################################
+# API and dashboard configuration
+################################################################
+
+[api]
+  entryPoint = "api"
+  dashboard = true
+
+################################################################
+# Routing Rules
+################################################################
+
+[file]
+
+[frontends]
+
+  [frontends.greeter-grpc]
+    entryPoints = ["https"]
+    backend = "greeter-grpc"
+    passHostHeader = true
+
+    [frontends.greeter-grpc.routes.route1]
+      rule = "PathPrefix:/"
+
+[backends]
+
+  [backends.greeter-grpc]
+    [backends.greeter-grpc.servers.server1]
+      url = "h2c://localhost:2302"

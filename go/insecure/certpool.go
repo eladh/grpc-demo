@@ -1,0 +1,96 @@
+package insecure
+
+import (
+	"crypto/tls"
+	"crypto/x509"
+)
+
+const certPEM = `-----BEGIN CERTIFICATE-----
+MIICvjCCAaYCCQDk3Go0OwGOGDANBgkqhkiG9w0BAQsFADAhMQswCQYDVQQGEwJJ
+TDESMBAGA1UEAwwJbG9jYWxob3N0MB4XDTE5MDIwNTA3NDUwM1oXDTIwMDIwNTA3
+NDUwM1owITELMAkGA1UEBhMCSUwxEjAQBgNVBAMMCWxvY2FsaG9zdDCCASIwDQYJ
+KoZIhvcNAQEBBQADggEPADCCAQoCggEBAKww/DkPl4BQOCnoMdcsdjC83oS0PymB
+U1auKa1gO12RXyjg7fZXwzYZK9Oyt/vAQKAKrjfVTckFkmyFd9ccQ4mN1lAZ+2yZ
+9Ir7hvonOdNKyjfbZS0B4QXByfwnVYQ3izkP29d+44ajzEstTLgwMkm4Bq0qD8ER
+t6gcZypw8GaEpnkiesy+DIm6L+KT92wkZDCj/q2CL9cgeZqPqzbcJ9l0Ly0Yoadb
+59Dnc9pimoSYB2u/P3C3b7W4RuBx01qPcXH3T3CES/6XZ2TxpBYa6sZ9IFEFLPhc
+k06toSk+QBtcZxYSFu6murRncHUByt+lrDx/ISdD6lTBDzaF42eTHt0CAwEAATAN
+BgkqhkiG9w0BAQsFAAOCAQEAM7my/17r9/wrUiafu7MdM55xOTBJeZlS5FhLl1kg
+XxUmdXPCHNWUVYSj0CNn0LuVBpiQpNqBI8egAkO5LRgcrSrNl+/yrgi2s5KkQ5/8
+tLAAheecw1+t5UMfdiCJ+ThI0ViozMTOzAYGTyHaVgp/RtCEqQx+3mkw0MajILWB
+jEdjgzJthPaBiIz9Tso2A3S4Jhrxo7UWvIdIlnYEN4mA6dB3f01mtg1q3NKV0912
+jsknJcPtvmz1zX66rMbQTupGHdB6GkVsv3KoImGo5X/l4J0q5zdNwKUq8wylCMRc
+GDRqdbZR41cm7b91L4qkzvcsZasOUSd5LltEA7SBWG5rJA==
+-----END CERTIFICATE-----
+`
+
+const serverPEM = `-----BEGIN CERTIFICATE-----
+MIICpDCCAYwCCQC26g8LYyteWDANBgkqhkiG9w0BAQsFADAUMRIwEAYDVQQDDAls
+b2NhbGhvc3QwHhcNMTkwMjA1MDc0NTQzWhcNMjAwMjA1MDc0NTQzWjAUMRIwEAYD
+VQQDDAlsb2NhbGhvc3QwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDB
+9zCb7VDDUCDCGcUFgIVzdbHYvoqV96u+CTgyj9BGnvFx+11YBA+I7fn23ZUEIAjA
++qHV2c1bl71ACor8JejWg34f5oKqke7dqjbQI/YGYLLCiLhKD9It+hrqeAbKsC2W
+GZgiEgYzi5S90Zq0TThWy7vk3+Nrfcx5sFaq0P3yYTGbC+jZNvplfmsxdEa7nz+t
+VUleuXrUHo2WmbEUiB+0z6VUaiVLKr5XYbqIGRzN3ymoUYdbk3ijPh20C4l7GHkb
+74AeIIZVWR7YkHvrOnc1GZ680l4hB0JGJkGG1Udw4Dipq5VHy7+mjmJtm28jFa1A
+P1oG//2+w5XT4wq5yfrPAgMBAAEwDQYJKoZIhvcNAQELBQADggEBAAlRY/x0OYtf
+0YDcnCpSqMgXXNMZU9IG3n7AqJG73nycSwGJ9/AJnHRc8yGiCEdNbyc3ZVir6bwf
+ayCM9fOA3ZsUAb6jLWEG+tIf6f0JYET84PoBiXMbgli7zNKYedVKp/p5BMTZepDR
+MhKnM7WaWcMXBza55BjwVEsDJPMKVSFgaZhaKACKH5AMJsi2w9NTk0yHCr5A453H
+J+10BfpYwXdpoMX8JvzG15VYQ1X0DywZEIzMtx9d2FvvkTTUR3rAVuz9iVPg84nr
+3mGkwJyq+MzfFAmE2iCoiNrV4EgJA4rItC9TASk+uKRwOhreS+EAskuy8n+2J7y6
+4ChW0YSxRfw=
+-----END CERTIFICATE-----`
+
+const keyPEM = `-----BEGIN PRIVATE KEY-----
+MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCsMPw5D5eAUDgp
+6DHXLHYwvN6EtD8pgVNWrimtYDtdkV8o4O32V8M2GSvTsrf7wECgCq431U3JBZJs
+hXfXHEOJjdZQGftsmfSK+4b6JznTSso322UtAeEFwcn8J1WEN4s5D9vXfuOGo8xL
+LUy4MDJJuAatKg/BEbeoHGcqcPBmhKZ5InrMvgyJui/ik/dsJGQwo/6tgi/XIHma
+j6s23CfZdC8tGKGnW+fQ53PaYpqEmAdrvz9wt2+1uEbgcdNaj3Fx909whEv+l2dk
+8aQWGurGfSBRBSz4XJNOraEpPkAbXGcWEhbuprq0Z3B1Acrfpaw8fyEnQ+pUwQ82
+heNnkx7dAgMBAAECggEAGzON1LHK3CFQDga5QOWsMhzUBiC3TaY5dRsESHhISIq7
+fqixztWkZ/pn+wRjniiLzPyC8x0GMbhoni4jdV7oqGU4suS33Dsh74a2lvP1ZZSO
+B27oN8jxNEid0PChyMZBfx0rPIq2BMIBdurMENjESPMCUv6vCG/1FGCQR5sZzwfp
+KXiaU8K8/BgeDkQdoGWtrOzd1kRwS1NaCp+ygml8fOT3rJgmRJnCBzVFqjuasqxn
+fgn6Uedt/7qDaL+6y3V0/t9ul0EUy5pM5QWp9D3rQCGVoc5GYdPYo+TmWFbA2Yu2
+PvUoWCtsyQmqHE1YA1QrMVYga07TRPM8YEolxC3CvQKBgQDZBNWwuZvb6dpeim69
+pasDqGLbR2t28TIqjTG2RiR2xbJHDguBK9XAmhN3ehr9/ONIr51Opam0SHyDs8tH
+WEUAsKOc+Gt0N4w9fXgTdYetXDlgr1rOEmjr0vYlgWtYOSEWFldSyo1/hmjDHpfo
+fKFeYPOzGvn9YjITSuTTL6PbDwKBgQDLHtlLPYOlVzkz31lgu4mFqE/oADsbUWdd
+H1/01rRnzSAgtTLjfKLYiITjCwOQaC0pfuWF+ZJSSHOXxZWev1kkUMIqoEMTWl2R
+IcrX96R8vXNnUj6H8Vhn3eUS7iU3vrWr4Rt9wm6ddWVKgQgt/FhjYedrvNWenhQC
+Ci3PDe9XUwKBgG2IySpXpFkM4VDSYi6KTZSdCrhOhekUuBNODIdJQ+JGykKeziO2
+Mj7yBV1KXhFP8I+hQ66MYulBpMb8ml86KCm+/fWeVO3lk3z9tPttWLuhTryEBTr5
+g8dzRRWNCtcOjqqNQCnjXiO9fWbuLBIFxZTTLm158i93vnqKVJBa/UL1AoGAKOoI
+2QgGCXr9Ub6OkVaVR+/0UIYjYchO6soUGQxagIIoE46MNph3cOhm5Bjm2eKyHiaq
+cwcnex2O8yZgkf53JUKDKfToLfDI4iANbN08K8g5g7lkURvDNADVUK/ZnVXz4DBS
+yk0s3Ni104EUNbcb0sD4zZHW8cFjxFlqiseCy3MCgYEAtw0hNpxi8IR2MbxkMhAu
+m82ieK/3H0CISvjuCjx6vndsnPXLyCBxeFjxWZ1XDkljRYXSRnIfTclQvBHB1BQH
+DfBvXSpndOJvB3eP7SAaImO6NeEqvMjMAA/s0rvH+/mXPA0lLEKZXbyYDPM+7Ji9
+oojmewxLKIDQzwnBc8fSS28=
+-----END PRIVATE KEY-----
+`
+
+var (
+	// Cert is a self signed certificate
+	Cert tls.Certificate
+	// CertPool contains the self signed certificate
+	CertPool *x509.CertPool
+)
+
+func init() {
+	//var err error
+	//Cert, err = tls.X509KeyPair([]byte(certPEM), []byte(keyPEM))
+	//if err != nil {
+	//	log.Fatalln("Failed to parse key pair:", err)
+	//}
+	//Cert.Leaf, err = x509.ParseCertificate(Cert.Certificate[0])
+	//if err != nil {
+	//	log.Fatalln("Failed to parse certificate:", err)
+	//}
+
+	CertPool = x509.NewCertPool()
+	//CertPool.AddCert(Cert.Leaf)
+	CertPool.AppendCertsFromPEM([]byte(serverPEM))
+}

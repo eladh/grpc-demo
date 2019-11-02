@@ -1,0 +1,62 @@
+################################################################
+# Global configuration
+################################################################
+
+debug = true
+
+logLevel = "DEBUG"
+
+rootCAs = [ "./ssl/127.0.0.1-cert.pem" ]
+
+################################################################
+# Entrypoints configuration
+################################################################
+
+[entryPoints]
+    [entryPoints.http]
+    address = ":80"
+
+################################################################
+# Traefik logs configuration
+################################################################
+
+[traefikLog]
+
+filePath = "log/traefik-grpc.log"
+
+################################################################
+# Access logs configuration
+################################################################
+
+[accessLog]
+
+filePath = "log/traefik-grpc-access.log"
+format = "json"
+
+################################################################
+# API and dashboard configuration
+################################################################
+
+[api]
+
+################################################################
+# Routing Rules
+################################################################
+
+[file]
+
+[frontends]
+
+  [frontends.greeter]
+    backend = "greeter"
+    passHostHeader = true
+
+    [frontends.greeter.routes.route1]
+      rule = "PathPrefix:/"
+
+[backends]
+
+  [backends.greeter]
+    [backends.greeter.servers.server1]
+      url = "https://127.0.0.1:443"
+      weight = 1

@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "org.company.registration";
+option java_outer_classname = "RegistrationProto";
+
+service Registration {
+    rpc Join (JoinToken) returns (AdminToken) {}
+}
+
+message JoinToken {
+    string node_id = 1;
+    string service_id = 2;
+}
+
+message AdminToken {
+    string token = 1;
+}
